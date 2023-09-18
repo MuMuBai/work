@@ -10,7 +10,7 @@ import GET_DATA
 from train_and_valid import train_and_valid
 import set_random_seed
 import time
-# device=torch.device('cuda:1')
+device=torch.device('cuda:1')
 # print(device)   ## parameters  hidden_num aa z epochs
 # print(torch.cuda.device_count())
 if __name__ == '__main__':

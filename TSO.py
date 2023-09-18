@@ -3,7 +3,7 @@ import math
 import torch
 import copy
 from basic_BP import basic_bp_weight_modified as bp_weight
-
+device=torch.device('cuda:1')
 def initialization(SearchAgents_no, dim, ub, lb):  #ub格式为 []
     #     SearchAgents_no 为种群数量
     # Boundary_no = ub.shape[0]   ##比如ub [1,1,1]
@@ -122,8 +122,17 @@ def fojb(vec_tensor,struct_of_model,loss_fn,data_train,data_train_target):
     hidden_num=struct_of_model[1]
     output_num=struct_of_model[2]
     model=bp_weight(input_num,hidden_num,output_num,vec_tensor)  ##创建一个模型 模型的原始参数用 T中的位置
+
+    model=model.to(device)
+
     # print(model)
     model.eval()
+
+
+    loss_fn=loss_fn.to(device)
+    data_train=data_train.to(device)
+    data_train_target=data_train_target.to(device)
+
     with torch.no_grad():
         loss_train = loss_fn(model(data_train).squeeze(-1), data_train_target).item()
 

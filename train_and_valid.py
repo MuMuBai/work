@@ -1,8 +1,23 @@
 import torch
+
+device=torch.device('cuda:1')
 def train_and_valid(model, opt, loss_fn, epochs, train_DataLoader, data_train, data_train_target, data_test,data_test_target):
     for epoch in range(epochs):
         model.train()
+
+        model=model.to(device)
+        data_train=data_train.to(device)
+        data_train_target=data_train_target.to(device)
+        data_test=data_test.to(device)
+        data_test_target=data_test_target.to(device)
+        loss_fn=loss_fn.to(device)
+
+
         for x, y in train_DataLoader:
+
+            x=x.to(device)
+            y=y.to(device)
+
             y_pred = model(x)
             loss = loss_fn(y_pred.squeeze(-1), y)
             opt.zero_grad()
