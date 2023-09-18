@@ -9,10 +9,12 @@ from basic_BP import basic_bp_weight_modified as bp_weight
 import GET_DATA
 from train_and_valid import train_and_valid
 import set_random_seed
-device=torch.device('cuda:1')
-print(device)   ## parameters  hidden_num aa z epochs
-print(torch.cuda.device_count())
+import time
+# device=torch.device('cuda:1')
+# print(device)   ## parameters  hidden_num aa z epochs
+# print(torch.cuda.device_count())
 if __name__ == '__main__':
+    time1=time.time()
     set_random_seed.get_random_seed(88)
     # train_DataLoader,test_DataLoader,data_train,data_train_target,data_test,data_test_target,feature_num=GET_DATA.GET_DATA(r'data.xlsx',['train','test'],[0,1,2,3,4,5,6],64)
     train_DataLoader,data_train,data_train_target,data_test,data_test_target,feature_num=GET_DATA.GET_510(r'510.xlsx', ['train'], [0, 1, 2, 3, 4, 5, 6], 64)
@@ -67,5 +69,7 @@ if __name__ == '__main__':
     loss_train,loss_test,acc_train,acc_test=train_and_valid(model,opt,loss_fn,epochs,train_DataLoader,data_train,data_train_target,data_test,data_test_target)
     print(list(model.parameters()))
     print('loss_train： ',loss_train,'loss_test： ',loss_test,'acc_train： ',acc_train,'acc_test： ',acc_test)
+    time2=time.time()
 
+    print('time',time2-time1)
 
