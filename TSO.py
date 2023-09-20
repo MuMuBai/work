@@ -3,7 +3,7 @@ import math
 import torch
 import copy
 from basic_BP import basic_bp_weight_modified as bp_weight
-device=torch.device('cuda:1')
+
 def initialization(SearchAgents_no, dim, ub, lb):  #ub格式为 []
     #     SearchAgents_no 为种群数量
     # Boundary_no = ub.shape[0]   ##比如ub [1,1,1]
@@ -12,19 +12,19 @@ def initialization(SearchAgents_no, dim, ub, lb):  #ub格式为 []
 
 
 
-def TAO(Particles_no,Max_iter,UP,LOW,Dim,fojb,struct_of_model,loss_fn,data_train,data_train_target):  ##原理 fobj=  loss (model(data_train),data_train_target)
+def TAO(Particles_no,Max_iter,UP,LOW,Dim,fojb,struct_of_model,loss_fn,data_train,data_train_target,aa,z):  ##原理 fobj=  loss (model(data_train),data_train_target)
 
     Tunal=torch.zeros(Dim)  ##存最优参数
     Tunal_fit=torch.inf   ##存最佳适应度 适应度越低越好
     T = initialization(Particles_no,Dim,UP,LOW);
-    Iter=0
-    aa=0.75 #aa是一个常数，用于确定金枪鱼跟随的最优个体和上一个个体的比重
-    z=0.05 ##超参数
+    Iter=1
+    aa=aa #aa是一个常数，用于确定金枪鱼跟随的最优个体和上一个个体的比重               0.75 0.05 0.90
+    z=z ##超参数
     Convergence_curve_iter0_to_MaxIter = []
     fitness=[ torch.inf for i in range(Particles_no)]
     # best_Tunal=torch.zeros(Dim)
     # best_Tunal_fit=torch.inf
-    while Iter<Max_iter:
+    while Iter<Max_iter+1:
 
         C=Iter/Max_iter
         a1=aa+(1-aa)*C
@@ -46,7 +46,7 @@ def TAO(Particles_no,Max_iter,UP,LOW,Dim,fojb,struct_of_model,loss_fn,data_train
 
 
 
-        if Iter==0:
+        if Iter==1:
             fit_old=copy.deepcopy(fitness) ##
             C_old=copy.deepcopy(T)
 
@@ -122,22 +122,17 @@ def fojb(vec_tensor,struct_of_model,loss_fn,data_train,data_train_target):
     hidden_num=struct_of_model[1]
     output_num=struct_of_model[2]
     model=bp_weight(input_num,hidden_num,output_num,vec_tensor)  ##创建一个模型 模型的原始参数用 T中的位置
-
-    model=model.to(device)
-
     # print(model)
     model.eval()
-
-
-    loss_fn=loss_fn.to(device)
-    data_train=data_train.to(device)
-    data_train_target=data_train_target.to(device)
-
     with torch.no_grad():
-        loss_train = loss_fn(model(data_train).squeeze(-1), data_train_target).item()
+        res_train = model(data_train).squeeze(-1)
 
+        res_train = (res_train >= 0.5)
+        res_train = (res_train == data_train_target)
+        acc_train = (res_train.sum() / len(data_train)).item()
+    # print(acc_train)
 
-    return loss_train
+    return acc_train*(-1)
 
 
 
@@ -153,19 +148,21 @@ def fojb(vec_tensor,struct_of_model,loss_fn,data_train,data_train_target):
 
 
 
-###matlab 源代码中 Beta里和论文中的描述有出入 这个版本的TAO遵循 论文中的公式
+#
+
+##matlab 源代码中 Beta里和论文中的描述有出入 这个版本的TAO遵循 论文中的公式
 def TAO_obey_the_easy(Particles_no,Max_iter,UP,LOW,Dim,fojb,struct_of_model,loss_fn,data_train,data_train_target):
     Tunal = torch.zeros(Dim)  ##存最优参数
     Tunal_fit = torch.inf  ##存最佳适应度 适应度越低越好
     T = initialization(Particles_no, Dim, UP, LOW);
-    Iter = 0
-    aa = 0.75  # aa是一个常数，用于确定金枪鱼跟随的最优个体和上一个个体的比重
-    z = 0.05  ##超参数
+    Iter = 1  ###0
+    aa = 0.7            #0.7  # aa是一个常数，用于确定金枪鱼跟随的最优个体和上一个个体的比重 0.75
+    z = 0.03####0.03  ##超参数
     Convergence_curve_iter0_to_MaxIter = []
     fitness = [torch.inf for i in range(Particles_no)]
     # best_Tunal=torch.zeros(Dim)
     # best_Tunal_fit=torch.inf
-    while Iter < Max_iter:
+    while Iter < Max_iter+1:
 
         C = Iter / Max_iter
         a1 = aa + (1 - aa) * C
@@ -185,7 +182,7 @@ def TAO_obey_the_easy(Particles_no,Max_iter,UP,LOW,Dim,fojb,struct_of_model,loss
 
                 Tunal = copy.deepcopy(T[i])  ##应该是硬拷贝 不同于matlab
 
-        if Iter == 0:
+        if Iter == 1:
             fit_old = copy.deepcopy(fitness)  ##
             C_old = copy.deepcopy(T)
 
@@ -207,8 +204,7 @@ def TAO_obey_the_easy(Particles_no,Max_iter,UP,LOW,Dim,fojb,struct_of_model,loss
             if torch.rand(1).item() < 0.5:  ##五五开
                 r1 = torch.rand(1).item()
                 ##与matlab 源代码有疑问  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                Beta = math.exp(r1 * math.exp(3 * math.cos(math.pi * ((Max_iter - Iter + 1) / Max_iter)))) * math.cos(
-                    2 * math.pi * r1)
+                Beta = math.exp( r1 * math.exp(3 * math.cos(math.pi * (Max_iter + (1 / Iter) - 1)))) * math.cos(2 * math.pi * r1)
                 if C > torch.rand(1).item():
                     T[0] = a1 * (Tunal + Beta * ((Tunal - T[0]).abs())) + a2 * T[0]
                 else:
@@ -225,15 +221,14 @@ def TAO_obey_the_easy(Particles_no,Max_iter,UP,LOW,Dim,fojb,struct_of_model,loss
                     T[0] = TF * (t ** 2) * T[0]
 
         for i in range(1, Particles_no):
+            # print(i)
             if torch.rand(1).item() < z:
                 T[i] = (UP - LOW) * torch.rand(Dim) + LOW  ## matlab 代码里的是乘一个数
             else:  ### >=Z
                 if torch.rand(1).item() < 0.5:  ##五五开
                     r1 = torch.rand(1).item()
                     ##与matlab 源代码有疑问  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    Beta = math.exp(
-                        r1 * math.exp(3 * math.cos(math.pi * ((Max_iter - Iter + 1) / Max_iter)))) * math.cos(
-                        2 * math.pi * r1)
+                    Beta = math.exp(r1 * math.exp(3 * math.cos(math.pi * (    Max_iter +  (1/Iter)  -1)   ))) * math.cos( 2 * math.pi * r1)
                     if C > torch.rand(1).item():
                         T[i] = a1 * (Tunal + Beta * ((Tunal - T[0]).abs())) + a2 * T[i - 1]
                     else:
