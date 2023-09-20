@@ -35,46 +35,50 @@ if __name__ == '__main__':
     best_acc_test=0
     best_aa=0
     best_z=0
-    for aa in np.arange(0.24, 1, 0.01):
+    best_area=0
+    for aa in np.arange(0.01, 1, 0.01):
 
         aa=float(aa)
         for z in np.arange(0.01,1, 0.01):
             z=float(z)
+            for area in range(1,21):
 
 
 
 
 
-            ###bp with TSO
-            loss_fn_TSO=nn.BCELoss()
 
-            Convergence_curve_iter0_to_MaxIter,Tunal,Tunal_fit=TAO(1000,100,torch.ones(dim)*1,torch.ones(dim)*(-1),dim,fojb,[input_num,hidden_num,output_num],loss_fn_TSO,data_train,data_train_target,aa,z)
-            '''
-            print(Tunal_fit)
-            print('--------TSO_tunal-----------------')
-            print(Tunal)
-            print('--------TSO_tunal-----------------')
-            print(Convergence_curve_iter0_to_MaxIter)
-            '''
+                ###bp with TSO
+                loss_fn_TSO=nn.BCELoss()
 
-            model_TSO=bp_weight(input_num, hidden_num, output_num,Tunal)
+                Convergence_curve_iter0_to_MaxIter,Tunal,Tunal_fit=TAO(1000,100,torch.ones(dim)*area,torch.ones(dim)*(-1)*area,dim,fojb,[input_num,hidden_num,output_num],loss_fn_TSO,data_train,data_train_target,aa,z)
+                '''
+                print(Tunal_fit)
+                print('--------TSO_tunal-----------------')
+                print(Tunal)
+                print('--------TSO_tunal-----------------')
+                print(Convergence_curve_iter0_to_MaxIter)
+                '''
 
-            # print(list(model_TSO.parameters()))
+                model_TSO=bp_weight(input_num, hidden_num, output_num,Tunal)
 
-            opt_TSO = torch.optim.SGD(model_TSO.parameters(), lr=0.001)
-            loss_TSO = nn.BCELoss()
-            epochs_TSO=500
-            tso_loss_train,tso_loss_test,tso_acc_train,tso_acc_test=train_and_valid(model_TSO, opt_TSO, loss_TSO,epochs_TSO, train_DataLoader, data_train, data_train_target, data_test,data_test_target)
-            print('\n')
-            print('aa:',aa,'z',z)
-            print('tso_loss_train： ',tso_loss_train,'tso_loss_test： ',tso_loss_test,'tso_acc_train： ',tso_acc_train,'tso_acc_test： ',tso_acc_test)
-            print('\n')
-            if best_acc_test < tso_acc_test :
-                best_acc_test=tso_acc_test
-                best_aa=aa
-                best_z=z
+                # print(list(model_TSO.parameters()))
 
-    print('best----------------------','aa:',best_aa,' z',best_z)
+                opt_TSO = torch.optim.SGD(model_TSO.parameters(), lr=0.001)
+                loss_TSO = nn.BCELoss()
+                epochs_TSO=500
+                tso_loss_train,tso_loss_test,tso_acc_train,tso_acc_test=train_and_valid(model_TSO, opt_TSO, loss_TSO,epochs_TSO, train_DataLoader, data_train, data_train_target, data_test,data_test_target)
+                print('\n')
+                print('aa:',aa,'z:',z,'area:',area)
+                print('tso_loss_train： ',tso_loss_train,'tso_loss_test： ',tso_loss_test,'tso_acc_train： ',tso_acc_train,'tso_acc_test： ',tso_acc_test)
+                print('\n')
+                if best_acc_test < tso_acc_test :
+                    best_acc_test=tso_acc_test
+                    best_aa=aa
+                    best_z=z
+                    best_area=area
+
+    print('best----------------------','aa:',best_aa,' z',best_z,'area:',best_area)
 
 
 ## 18 94     13 96    11 94.7      14 94.7
