@@ -10,11 +10,11 @@ import GET_DATA
 from train_and_valid import train_and_valid
 import set_random_seed
 import time
-device=torch.device('cuda:1')
+# device=torch.device('cuda:1')
 # print(device)   ## parameters  hidden_num aa z epochs
 # print(torch.cuda.device_count())
 if __name__ == '__main__':
-    time1=time.time()
+    # time1=time.time()
     set_random_seed.get_random_seed(88)
     # train_DataLoader,test_DataLoader,data_train,data_train_target,data_test,data_test_target,feature_num=GET_DATA.GET_DATA(r'data.xlsx',['train','test'],[0,1,2,3,4,5,6],64)
     train_DataLoader,data_train,data_train_target,data_test,data_test_target,feature_num=GET_DATA.GET_510(r'510.xlsx', ['train'], [0, 1, 2, 3, 4, 5, 6], 64)
@@ -26,8 +26,8 @@ if __name__ == '__main__':
     hidden_num=14  ##设定隐藏层是4
     output_num=1
     dim=feature_num*hidden_num + hidden_num + hidden_num * output_num + output_num
-    print(dim)
-
+    # print(dim)
+    file=open('result.txt','w')
 
 
 
@@ -68,19 +68,19 @@ if __name__ == '__main__':
                 loss_TSO = nn.BCELoss()
                 epochs_TSO=500
                 tso_loss_train,tso_loss_test,tso_acc_train,tso_acc_test=train_and_valid(model_TSO, opt_TSO, loss_TSO,epochs_TSO, train_DataLoader, data_train, data_train_target, data_test,data_test_target)
-                print('\n')
-                print('aa:',aa,'z:',z,'area:',area)
-                print('tso_loss_train： ',tso_loss_train,'tso_loss_test： ',tso_loss_test,'tso_acc_train： ',tso_acc_train,'tso_acc_test： ',tso_acc_test)
-                print('\n')
+                print('\n', file=file)
+                print('aa:',aa,'z:',z,'area:',area, file=file)
+                print('tso_loss_train： ',tso_loss_train,'tso_loss_test： ',tso_loss_test,'tso_acc_train： ',tso_acc_train,'tso_acc_test： ',tso_acc_test, file=file)
+                print('\n' ,file=file)
                 if best_acc_test < tso_acc_test :
                     best_acc_test=tso_acc_test
                     best_aa=aa
                     best_z=z
                     best_area=area
 
-    print('best----------------------','aa:',best_aa,' z',best_z,'area:',best_area)
+    print('best----------------------','best_aa:',best_aa,'best_z',best_z,'best_area:',best_area,'best_acc_test',best_acc_test, file=file)
 
-
+    file.close()
 ## 18 94     13 96    11 94.7      14 94.7
 
 '''
