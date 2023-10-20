@@ -46,6 +46,13 @@ def GET_510(file_name,sheets,usecols,batch_size):
     # print(data_shuffled.shape, data_target_shuffled.shape)
     # data_test_target = torch.from_numpy(data_test_target).float()
     # print(data_train_target)
+
+    mean=torch.mean(data_shuffled,dim=0)
+    std=torch.std(data_shuffled,dim=0)
+    data_shuffled=(data_shuffled-mean)/std   ##Z-SCORE 变换
+    # print(torch.std(data_shuffled,dim=0))
+
+
     data_train=data_shuffled[:length*7//10]
     data_train_target=data_shuffled_target[:length*7//10]
 

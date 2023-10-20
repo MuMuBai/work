@@ -3,16 +3,16 @@ import pandas as pd
 import numpy as np
 import torch.nn.functional as F
 from torch import nn
-from TSO import *
+
+import SCSO
+from SCSO import *
 from basic_BP import basic_bp as basic_bp
 from basic_BP import basic_bp_weight_modified as bp_weight
 import GET_DATA
 from train_and_valid import train_and_valid
 import set_random_seed
 import time
-# device=torch.device('cuda:1')
-# print(device)   ## parameters  hidden_num aa z epochs
-# print(torch.cuda.device_count())
+
 if __name__ == '__main__':
     # time1=time.time()
     set_random_seed.get_random_seed(88)
@@ -27,60 +27,63 @@ if __name__ == '__main__':
     output_num=1
     dim=feature_num*hidden_num + hidden_num + hidden_num * output_num + output_num
     # print(dim)
-    file=open('result.txt','w')
-
-
-
-
-    best_acc_test=0
-    best_aa=0
-    best_z=0
-    best_area=0
-    for aa in np.arange(0.01, 1, 0.01):
-
-        aa=float(aa)
-        for z in np.arange(0.01,1, 0.01):
-            z=float(z)
-            for area in range(1,21):
 
 
 
 
 
 
-                ###bp with TSO
-                loss_fn_TSO=nn.BCELoss()
 
-                Convergence_curve_iter0_to_MaxIter,Tunal,Tunal_fit=TAO(1000,100,torch.ones(dim)*area,torch.ones(dim)*(-1)*area,dim,fojb,[input_num,hidden_num,output_num],loss_fn_TSO,data_train,data_train_target,aa,z)
-                '''
-                print(Tunal_fit)
-                print('--------TSO_tunal-----------------')
-                print(Tunal)
-                print('--------TSO_tunal-----------------')
-                print(Convergence_curve_iter0_to_MaxIter)
-                '''
 
-                model_TSO=bp_weight(input_num, hidden_num, output_num,Tunal)
 
-                # print(list(model_TSO.parameters()))
 
-                opt_TSO = torch.optim.SGD(model_TSO.parameters(), lr=0.001)
-                loss_TSO = nn.BCELoss()
-                epochs_TSO=500
-                tso_loss_train,tso_loss_test,tso_acc_train,tso_acc_test=train_and_valid(model_TSO, opt_TSO, loss_TSO,epochs_TSO, train_DataLoader, data_train, data_train_target, data_test,data_test_target)
-                print('\n', file=file)
-                print('aa:',aa,'z:',z,'area:',area, file=file)
-                print('tso_loss_train： ',tso_loss_train,'tso_loss_test： ',tso_loss_test,'tso_acc_train： ',tso_acc_train,'tso_acc_test： ',tso_acc_test, file=file)
-                print('\n' ,file=file)
-                if best_acc_test < tso_acc_test :
-                    best_acc_test=tso_acc_test
-                    best_aa=aa
-                    best_z=z
-                    best_area=area
 
-    print('best----------------------','best_aa:',best_aa,'best_z',best_z,'best_area:',best_area,'best_acc_test',best_acc_test, file=file)
+    S=[ i/10 for i in range(10,600)]
 
-    file.close()
+    best_test_acc=0
+    for s in S:###bp with TSO
+        loss_fn_SCSO=nn.BCELoss()
+
+        Best_Score,BestFit,Convergence_curve=SCSO(1000,1000,torch.ones(dim)*(-10),torch.ones(dim)*10,dim,fobj,[input_num,hidden_num,output_num],loss_fn_SCSO,data_train,data_train_target,s)
+
+        print(BestFit)
+        print('--------BEST_FIT-----------------')
+        print(Best_Score)
+        print('--------BEST_SCORE-----------------')
+        print(Convergence_curve)
+
+
+        model_SCSO=bp_weight(input_num, hidden_num, output_num,BestFit)
+
+        # print(list(model_TSO.parameters()))
+
+        opt_SCSO = torch.optim.SGD(model_SCSO.parameters(), lr=0.001)
+        loss_SCSO = nn.BCELoss()
+        epochs_SCSO=500
+
+        tso_loss_train,tso_loss_test,tso_acc_train,tso_acc_test,probility=train_and_valid(model_SCSO, opt_SCSO, loss_SCSO,epochs_SCSO, train_DataLoader, data_train, data_train_target, data_test,data_test_target)
+        if best_test_acc<=tso_acc_test:
+            best_test_acc=tso_acc_test
+            with open('res.txt', 'a') as f:
+                print(tso_acc_train,file=f)
+                print(tso_acc_test,file=f)
+                print(probility, file=f)
+
+
+
+    #     if best_score < tso_acc_test:
+    #         best_probility=probility
+    #         best_score=tso_acc_test
+    #         print(i)
+    # print(best_score)
+    # print(best_probility)
+
+
+
+
+
+
+
 ## 18 94     13 96    11 94.7      14 94.7
 
 '''

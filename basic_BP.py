@@ -85,3 +85,28 @@ class basic_bp_weight_modified(nn.Module):
         x = F.sigmoid(self.fc2(x))
 
         return x
+
+
+
+class basic_bp_softmax(nn.Module):
+    def __init__(self,input_num,hidden_num,output_num):
+        super(basic_bp_softmax, self).__init__()
+        self.fc1=nn.Linear(input_num,hidden_num)
+
+        # self.relu=nn.ReLU()
+        self.fc2=nn.Linear(hidden_num,output_num)
+        # self.bn = BN = nn.BatchNorm1d(input_num)
+        # self.sigmoid=nn.Sigmoid()
+        # print(self.fc1.weight)
+        # print(self.fc1.bias)
+        # print(self.fc2.weight)
+        # print(self.fc2.bias)
+
+    def forward(self,x):
+        # x=self.bn(x)
+        # print(x)
+        x=F.relu(self.fc1(x))
+
+        x=self.fc2(x)
+
+        return x
